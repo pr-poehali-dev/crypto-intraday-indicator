@@ -7,13 +7,17 @@ interface OrderBookData {
   asks: [string, string][];
 }
 
-const OrderBook = () => {
+interface OrderBookProps {
+  symbol: string;
+}
+
+const OrderBook = ({ symbol }: OrderBookProps) => {
   const [orderBook, setOrderBook] = useState<OrderBookData>({ bids: [], asks: [] });
 
   useEffect(() => {
     const fetchOrderBook = async () => {
       try {
-        const response = await fetch('https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=10');
+        const response = await fetch(`https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=10`);
         const data = await response.json();
         setOrderBook(data);
       } catch (error) {
@@ -25,7 +29,7 @@ const OrderBook = () => {
     const interval = setInterval(fetchOrderBook, 2000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [symbol]);
 
   const formatPrice = (price: string) => parseFloat(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const formatAmount = (amount: string) => parseFloat(amount).toFixed(4);
@@ -38,7 +42,7 @@ const OrderBook = () => {
       <CardContent className="p-0">
         <div className="grid grid-cols-3 gap-2 px-4 pb-2 text-xs text-muted-foreground font-medium">
           <div>Price (USDT)</div>
-          <div className="text-right">Amount (BTC)</div>
+          <div className="text-right">Amount</div>
           <div className="text-right">Total</div>
         </div>
         

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import PriceChart from '@/components/PriceChart';
 import OrderBook from '@/components/OrderBook';
@@ -20,14 +21,22 @@ interface TickerData {
   quoteVolume: string;
 }
 
+const CRYPTO_PAIRS = [
+  { symbol: 'BTCUSDT', name: 'BTC/USDT', icon: '₿' },
+  { symbol: 'ETHUSDT', name: 'ETH/USDT', icon: 'Ξ' },
+  { symbol: 'BNBUSDT', name: 'BNB/USDT', icon: '◆' },
+  { symbol: 'SOLUSDT', name: 'SOL/USDT', icon: '◎' }
+];
+
 const Index = () => {
+  const [selectedPair, setSelectedPair] = useState(CRYPTO_PAIRS[0]);
   const [tickerData, setTickerData] = useState<TickerData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const fetchTicker = async () => {
       try {
-        const response = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+        const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${selectedPair.symbol}`);
         const data = await response.json();
         setTickerData(data);
         setIsConnected(true);
@@ -41,7 +50,7 @@ const Index = () => {
     const interval = setInterval(fetchTicker, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedPair]);
 
   const priceChange = parseFloat(tickerData?.priceChangePercent || '0');
   const isPositive = priceChange >= 0;
@@ -49,7 +58,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-[1920px] mx-auto space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Icon name="TrendingUp" className="text-primary" size={32} />
             <div>
@@ -61,6 +70,21 @@ const Index = () => {
                 <span>Binance API</span>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {CRYPTO_PAIRS.map((pair) => (
+              <Button
+                key={pair.symbol}
+                variant={selectedPair.symbol === pair.symbol ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedPair(pair)}
+                className="gap-1.5"
+              >
+                <span className="text-base">{pair.icon}</span>
+                <span className="font-semibold">{pair.name.split('/')[0]}</span>
+              </Button>
+            ))}
           </div>
 
           {tickerData && (
@@ -80,14 +104,17 @@ const Index = () => {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold">BTC/USDT</CardTitle>
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <span className="text-xl">{selectedPair.icon}</span>
+                    {selectedPair.name}
+                  </CardTitle>
                   <Badge variant="outline" className={isPositive ? 'text-gain border-accent/50' : 'text-loss border-destructive/50'}>
                     24h {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <PriceChart />
+                <PriceChart symbol={selectedPair.symbol} />
               </CardContent>
             </Card>
 
@@ -113,7 +140,7 @@ const Index = () => {
 
           <div className="space-y-4">
             <MarketStats tickerData={tickerData} />
-            <OrderBook />
+            <OrderBook symbol={selectedPair.symbol} />
           </div>
         </div>
       </div>

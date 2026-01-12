@@ -6,14 +6,18 @@ interface KlineData {
   price: number;
 }
 
-const PriceChart = () => {
+interface PriceChartProps {
+  symbol: string;
+}
+
+const PriceChart = ({ symbol }: PriceChartProps) => {
   const [chartData, setChartData] = useState<KlineData[]>([]);
 
   useEffect(() => {
     const fetchKlines = async () => {
       try {
         const response = await fetch(
-          'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=24'
+          `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=5m&limit=24`
         );
         const data = await response.json();
         
@@ -35,7 +39,7 @@ const PriceChart = () => {
     const interval = setInterval(fetchKlines, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [symbol]);
 
   return (
     <div className="w-full h-[400px]">
